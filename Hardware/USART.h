@@ -4,6 +4,8 @@
 #include "stm32f10x.h"
 #include <stdio.h>
 
+#define USART_STR_MAX_LEN 16
+
 void USART_GPIO_Init(void);
 void WaitBusy(USART_TypeDef* USARTx, uint16_t USART_FLAG);
 uint8_t USART_ReceiveByteFlag(uint8_t *ReceiveByte);

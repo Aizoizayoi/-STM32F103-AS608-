@@ -748,7 +748,7 @@ I (.\Library\stm32f10x_usart.h)(0x4D783BB4)
 I (.\Library\stm32f10x_wwdg.h)(0x4D783BB4)
 I (.\Library\misc.h)(0x4D783BB4)
 F (.\Library\stm32f10x_wwdg.h)(0x4D783BB4)()
-F (.\User\main.c)(0x6AEEEA47)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
+F (.\User\main.c)(0x6AEFFD8F)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
 I (.\Start\stm32f10x.h)(0x4D783CB4)
 I (.\Start\core_cm3.h)(0x4D523B58)
 I (D:\App\KeilC51\ARM\ARMCC\include\stdint.h)(0x588B8344)
@@ -780,7 +780,7 @@ I (.\Library\misc.h)(0x4D783BB4)
 I (.\Hardware\AS608.h)(0x6AEAA423)
 I (.\Hardware\AS608_USART_Ins.h)(0x6AE86C59)
 I (.\Hardware\AS608_USART.h)(0x6AEDAB9E)
-I (.\Hardware\USART.h)(0x6AEEBCA7)
+I (.\Hardware\USART.h)(0x6AEFEC1B)
 I (D:\App\KeilC51\ARM\ARMCC\include\stdio.h)(0x588B8344)
 I (.\Hardware\OLED.h)(0x616ED05A)
 I (User\Delay.h)(0x6130920D)
@@ -848,7 +848,7 @@ I (.\Library\stm32f10x_usart.h)(0x4D783BB4)
 I (.\Library\stm32f10x_wwdg.h)(0x4D783BB4)
 I (.\Library\misc.h)(0x4D783BB4)
 F (.\User\Delay.h)(0x6130920D)()
-F (.\Hardware\AS608_USART.c)(0x6AEEE342)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\as608_usart.o --omf_browse .\objects\as608_usart.crf --depend .\objects\as608_usart.d)
+F (.\Hardware\AS608_USART.c)(0x6AF00182)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\as608_usart.o --omf_browse .\objects\as608_usart.crf --depend .\objects\as608_usart.d)
 I (.\Start\stm32f10x.h)(0x4D783CB4)
 I (.\Start\core_cm3.h)(0x4D523B58)
 I (D:\App\KeilC51\ARM\ARMCC\include\stdint.h)(0x588B8344)
@@ -880,7 +880,7 @@ I (.\Library\misc.h)(0x4D783BB4)
 I (Hardware\AS608_USART.h)(0x6AEDAB9E)
 F (.\Hardware\AS608_USART.h)(0x6AEDAB9E)()
 F (.\Hardware\AS608_USART_Ins.h)(0x6AE86C59)()
-F (.\Hardware\AS608.c)(0x6AEEE350)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\as608.o --omf_browse .\objects\as608.crf --depend .\objects\as608.d)
+F (.\Hardware\AS608.c)(0x6AEFEBF9)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\as608.o --omf_browse .\objects\as608.crf --depend .\objects\as608.d)
 I (.\Start\stm32f10x.h)(0x4D783CB4)
 I (.\Start\core_cm3.h)(0x4D523B58)
 I (D:\App\KeilC51\ARM\ARMCC\include\stdint.h)(0x588B8344)
@@ -947,8 +947,8 @@ I (.\Library\misc.h)(0x4D783BB4)
 I (Hardware\OLED_Font.h)(0x61683CC9)
 F (.\Hardware\OLED.h)(0x616ED05A)()
 F (.\Hardware\OLED_Font.h)(0x61683CC9)()
-F (.\Hardware\USART.c)(0x6AEECC90)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\usart.o --omf_browse .\objects\usart.crf --depend .\objects\usart.d)
-I (Hardware\USART.h)(0x6AEEBCA7)
+F (.\Hardware\USART.c)(0x6AEFFF3B)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\User -I .\Library -I .\Hardware -I .\Start -I .\Library-I.\RTE\_Target_1-ID:\App\KeilC51\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\App\KeilC51\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\usart.o --omf_browse .\objects\usart.crf --depend .\objects\usart.d)
+I (Hardware\USART.h)(0x6AEFEC1B)
 I (.\Start\stm32f10x.h)(0x4D783CB4)
 I (.\Start\core_cm3.h)(0x4D523B58)
 I (D:\App\KeilC51\ARM\ARMCC\include\stdint.h)(0x588B8344)
@@ -979,4 +979,4 @@ I (.\Library\stm32f10x_wwdg.h)(0x4D783BB4)
 I (.\Library\misc.h)(0x4D783BB4)
 I (D:\App\KeilC51\ARM\ARMCC\include\stdio.h)(0x588B8344)
 I (.\User\Delay.h)(0x6130920D)
-F (.\Hardware\USART.h)(0x6AEEBCA7)()
+F (.\Hardware\USART.h)(0x6AEFEC1B)()

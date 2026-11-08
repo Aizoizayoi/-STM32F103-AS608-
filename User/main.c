@@ -11,7 +11,7 @@
 
 #define AS_CharBuffer1 0x01
 #define AS_CharBuffer2 0x02
-
+#define AS_MAX_FingerStore 1023
 char AckMessage[32];
 
 
@@ -24,7 +24,7 @@ void PrintAckMessage(uint8_t Ack)
 
 
 
-void Get_FingerPrint(uint8_t PageID)
+void Get_FingerPrint(uint16_t PageID)
 {
 	uint8_t Step = 0;
 	uint8_t Ack = 0;
@@ -50,6 +50,7 @@ void Get_FingerPrint(uint8_t PageID)
 				if(Ack == 0)
 				{
 					printf("Image Get Success.\r\n");
+					GetImageRetry=0;
 					Step = 1;
 				}
 				else if(Ack == 0x02)
@@ -83,7 +84,7 @@ void Get_FingerPrint(uint8_t PageID)
 					while(AS608_PS_GetImage()==0x00)		//检测是否抬手
 					{
 						Delay_ms(50);
-						if(++FingerWithout>5)
+						if(++FingerWithout>200)
 						{
 							printf("Same finger detected. Timeout Return.\r\n");
 							return;
@@ -209,7 +210,7 @@ void MatchFinger()
 		printf("Genchar Fail.Return.\r\n");
 		return;
 	}
-	if(AS608_PS_Search(AS_CharBuffer1,0x00,10,&PageID,&MatchScore)!=0x00)
+	if(AS608_PS_Search(AS_CharBuffer1,0x00,AS_MAX_FingerStore+1,&PageID,&MatchScore)!=0x00)
 	{
 		printf("Finger Search Fail.Return.\r\n");
 		return;
@@ -247,64 +248,90 @@ void AS608_ShowMenu(void)
 	printf("4.Exit.\r\n");
 }
 
-uint8_t AS608_TimeOutJudge(uint8_t *Data)
+/* 把十进制文本转成 0~1024。成功返回 1，并写入 Number */
+uint8_t StringToNumber(char *String, uint16_t *Number)
 {
-	uint8_t TimeOut=200;
-	uint8_t TimeOutFlag=1;
-	while(USART_ReceiveByteFlag(Data)!=1)
-	{
-		TimeOut--;
-		Delay_ms(50);
-		if(TimeOut==0)
-		{
-			TimeOutFlag=0;
-			break;
-		}
-		
-	}
-	if(TimeOutFlag==0)
-	{
-		printf("Time Out. Return to Menu.\r\n");
-		AS608_ShowMenu();
+	uint16_t i;
+	uint16_t num=0;
+
+	if(String==NULL || Number==NULL || String[0]=='\0')//空指针及空字符
 		return 0;
+
+	for(i=0;String[i]!='\0';i++)
+	{
+		if(String[i]<'0' || String[i]>'9')//避免非数字混入
+			return 0;
+		
+		num=(uint16_t)(num*10u+(uint16_t)(String[i]-'0')); //x10后加，再x10，再加，再x10
+		if(num>AS_MAX_FingerStore)	//指纹库最大容积0-1023
+			return 0;
 	}
+	*Number=num;
 	return 1;
 }
 
+/* 用 USART_ReceiveString 收一行文本再转成数字。1=成功，2=内容非法，0=超时 */
+uint8_t AS608_ReceiveNumber(uint16_t *Number)
+{
+	char buf[USART_STR_MAX_LEN];
+	uint8_t Result;
+
+	Result=USART_ReceiveString(buf);
+	if(Result==2)
+	{
+		return 0;
+	}
+
+	if(Result==0 || StringToNumber(buf,Number)==0)//输入非法或数字超出最大值
+	{
+		printf("Input Invalid. Please input num from 0-1023.\r\n");
+		return 2;
+	}
+	printf("Receive\r\n");
+	return 1;
+}
+
+
 void AS608_Workshop(void)
 {
-	uint8_t Choice=0,PageID=0,DeleteN=1;
+	uint16_t Choice=0,PageID=0;
+	uint8_t Retry=0;
+	uint8_t ReadResult;
+
 	AS608_ShowMenu();
-	uint32_t TimeOut=200;
 
 	while(1)
 	{
-		while(USART_ReceiveByteFlag(&Choice)!=1)
+		ReadResult=AS608_ReceiveNumber(&Choice);
+	
+		if(ReadResult==0)
 		{
-			TimeOut--;
-			Delay_ms(50);
-			if(TimeOut==0)
+			printf("Long time no operation. Exit.\r\n");
+			return;
+		}
+		if(ReadResult!=1 || Choice<1 || Choice>4)
+		{
+			Retry++;
+			if(Retry>=5)
 			{
-				printf("Long time no operation. Exit.\r\n");
+				printf("Too many wrong number. Return\r\n");
 				return;
 			}
-		}	
+			printf("Invalid choice. Please Retry. Left %d/5.\r\n",5-Retry);
+			continue;
+		}
+		Retry=0;
 
-		TimeOut=200;
-		
 		switch(Choice)
 		{
 			case 1:
 			{
 				printf("Please input the stored position.\r\n");
-				if(AS608_TimeOutJudge(&PageID)==0)
+				if(AS608_ReceiveNumber(&PageID)!=1)
 					break;
-
-
-				TimeOut=200;
 				printf("--->PageID=%d Input OK.\r\n",PageID);
 				Get_FingerPrint(PageID);
-				AS608_ShowMenu();	
+				AS608_ShowMenu();
 				break;
 			}
 			case 2:
@@ -316,35 +343,28 @@ void AS608_Workshop(void)
 			case 3:
 			{
 				printf("Please input the ID you want to delete.\r\n");
-				if(AS608_TimeOutJudge(&PageID)==0)
+				if(AS608_ReceiveNumber(&PageID)!=1)
 					break;
-
-				TimeOut=200;
 				printf("--->PageID=%d Input OK.\r\n",PageID);
-				printf("Please input the Number you want to delete.\r\n");
-				if(AS608_TimeOutJudge(&DeleteN)==0)
-					break;
-
-				TimeOut=200;
-				printf("--->DeleteN=%d Input OK.\r\n",DeleteN);
-				DeleteFinger(PageID,DeleteN);
+				DeleteFinger(PageID,1);
 				AS608_ShowMenu();
 				break;
 			}
 			case 4:
 			{
 				printf("Exit Sucess.\r\n");
-				
 				return;
 			}
 			default:
 			{
 				printf("Invalid choice. Please try again.\r\n");
-				continue;
+				break;
 			}
 		}
 	}
 }
+
+
 
 int main(void)
 {

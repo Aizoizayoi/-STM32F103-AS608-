@@ -11,7 +11,6 @@
 /** @defgroup W25Q64_STRING_LEN_DEFINE
   * @{
   */
-#define USART_STR_MAX_LEN 16
 
 /**
   * @brief  USART1的GPIO引脚初始化，使用PA9作为TX，PA10作为RX
@@ -22,7 +21,7 @@ void USART_GPIO_Init(void)
 {
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);//使能USART1时钟
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);//使能GPIOA时钟
-	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
 	/*配置GPIO*/
 	GPIO_InitTypeDef GPIO_InitStructure;//定义GPIO初始化结构体
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;//USART硬件控制发送，使用复用推挽
@@ -30,7 +29,7 @@ void USART_GPIO_Init(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA,&GPIO_InitStructure);
 	
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;//接收数据线，上拉输入
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;//接收数据线，上拉输入
 	GPIO_InitStructure.GPIO_Pin = USART1_RX;//接收数据线，pin10
 	GPIO_Init(GPIOA,&GPIO_InitStructure);
 
@@ -45,7 +44,30 @@ void USART_GPIO_Init(void)
 	USART_Init(USART1,&USART_InitStructure);//初始化USART1
 	
 	USART_Cmd(USART1,ENABLE);//使能USART1
+	
+	TIM_TimeBaseInitTypeDef TimeBaseInitStructure;
+	TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+	TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Down;
+	TimeBaseInitStructure.TIM_Period = 7200 - 1;
+	TimeBaseInitStructure.TIM_Prescaler = 10000 - 1;
+	TimeBaseInitStructure.TIM_RepetitionCounter = 0;
+	TIM_TimeBaseInit(TIM2,&TimeBaseInitStructure);
+	
+	TIM_ITConfig(TIM2,TIM_IT_Update,ENABLE);
+	TIM_ClearITPendingBit(TIM2,TIM_IT_Update);	/* TimeBaseInit 会置位更新标志，先清掉 */
+	TIM_Cmd(TIM2,DISABLE);
+	
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+	NVIC_InitTypeDef NVIC_InitStructure;
+	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+	NVIC_Init(&NVIC_InitStructure);
 }
+
+
+
 
 /**
   * @brief  USART1的GPIO引脚初始化，使用PA9作为TX，PA10作为RX
@@ -143,10 +165,12 @@ uint8_t USART_IsAllowedChar(char ch)
 /**
   * @brief  USART接收字符串，串口输入回车则表示输入结束
   * @param  ReceiveString
-  * @retval 0或1，0表示接收数据失败或非法，1表示接收成功
+  * @retval 1表示接收成功，0表示数据非法或溢出，2表示约30秒无输入
   * @note 接收的字符需要进行合法判断，要属于可输入的字符范围，若接收到非法字符则丢弃，继续接收，直到接收到回车为止
 */
 
+volatile uint8_t TimeOut=0;
+volatile uint16_t CounterDown=0;
 
 uint8_t USART_ReceiveString(char *ReceiveString)
 {
@@ -154,6 +178,14 @@ uint8_t USART_ReceiveString(char *ReceiveString)
 	uint8_t Overflow=0,illegal=0,ifdone=0;
 	uint16_t idle_us;	//累加延时
 
+	TIM_Cmd(TIM2,DISABLE);
+	TIM_SetCounter(TIM2,7200-1);	/* 向下计数，装回自动重装值，下一次才是完整的 1 秒 */
+	TIM_ClearITPendingBit(TIM2,TIM_IT_Update);
+	CounterDown=0;
+	TimeOut=0;
+
+	TIM_Cmd(TIM2,ENABLE);
+	
 	ReceiveString[0] = '\0';//初始化字符串为空，避免了指针指向未初始化或内容随机的野内存。
 	while(1)//通过循环不断接收串口发送的数据进行判断
 	{
@@ -182,6 +214,15 @@ uint8_t USART_ReceiveString(char *ReceiveString)
 			else
 				Overflow = 1;//若接收到的字符超过了最大长度，则标记溢出，继续接收，直到接收到回车为止
 		}
+		else if(TimeOut==1)
+		{
+			TIM_Cmd(TIM2,DISABLE);
+			TIM_SetCounter(TIM2,7200-1);	/* 向下计数，装回自动重装值，下一次才是完整的 1 秒 */
+			TIM_ClearITPendingBit(TIM2,TIM_IT_Update);
+			CounterDown=0;
+			TimeOut=0;
+			return 2;
+		}
 		else if(ifdone > 0)//此为串口助手没有打回车就点击发送的状况，有输入但没有接收到结束标识符，则在一定等待后自动跳出循环，并接收没有回车的数据
 		{
 			Delay_us(50);
@@ -189,7 +230,14 @@ uint8_t USART_ReceiveString(char *ReceiveString)
 			if(idle_us > 3000)
 				break;
 		}
+		
 	}
+	TIM_Cmd(TIM2,DISABLE);
+	TIM_SetCounter(TIM2,7200-1);	/* 向下计数，装回自动重装值，下一次才是完整的 1 秒 */
+	TIM_ClearITPendingBit(TIM2,TIM_IT_Update);
+	CounterDown=0;
+	TimeOut=0;
+
 	ReceiveString[ifdone]='\0';//在接收到回车后，给字符串添加结束标志符'\0'，以便后续使用字符串函数进行处理
 		
 	if(illegal==1 || ifdone==0 || Overflow==1)//如果数据非法，则直接抛弃数组后续的字符，并置标志位
@@ -197,8 +245,25 @@ uint8_t USART_ReceiveString(char *ReceiveString)
 		ReceiveString[0]='\0';//将字符串置为空，避免了指针指向未初始化或内容随机的野内存。
 		return 0;
 	}
+	
 	return 1;//返回接收成功标志位
 }
+
+void TIM2_IRQHandler(void)
+{
+	if(TIM_GetITStatus(TIM2,TIM_IT_Update)!= RESET)
+	{
+		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+		CounterDown++;
+		if(CounterDown>=30)
+		{
+			CounterDown=0;
+			TIM_Cmd(TIM2,DISABLE);
+			TimeOut=1;
+		}
+	}
+}
+
 /**
   * @brief  printf重定向到USART1，可通过printf函数直接输出到串口进行显示
   * @param  ch：需要发送的字符，*f：printf函数的文件指针，通常为stdout
@@ -210,4 +275,5 @@ int fputc(int ch, FILE *f)
 	USART_SendByte(ch);
 	return ch;
 }
+
 

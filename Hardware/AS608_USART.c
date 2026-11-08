@@ -98,7 +98,10 @@ void USART2_IRQHandler(void)
 				}
 				else if(ReceiveData!=0xEF)
 				{
-					USART_Reset();
+					USART2_RX_STA=0;
+					rx_need=0;
+					rx_len=0;
+					rx_step=0;
 				}
 				break;
 			case 2:
@@ -108,7 +111,10 @@ void USART2_IRQHandler(void)
 					rx_len= (USART2_RX_BUF[7]<<8) | USART2_RX_BUF[8];
 					if(rx_len<3 || (rx_len+9) >USART2_MAX_RECV_LEN)
 					{
-						USART_Reset();
+						USART2_RX_STA=0;
+						rx_need=0;
+						rx_len=0;
+						rx_step=0;
 						break;
 					}
 					else
