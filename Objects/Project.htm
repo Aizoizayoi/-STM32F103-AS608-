@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\Project.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\Project.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Sun Nov 08 12:58:42 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Nov 09 16:09:58 2026
 <BR><P>
 <H3>Maximum Stack Usage =        112 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -474,7 +474,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AS608_Workshop
 </UL>
 
-<P><STRONG><a name="[52]"></a>AS608_USART_GPIO_Init</STRONG> (Thumb, 176 bytes, Stack size 32 bytes, as608_usart.o(i.AS608_USART_GPIO_Init))
+<P><STRONG><a name="[52]"></a>AS608_USART_GPIO_Init</STRONG> (Thumb, 170 bytes, Stack size 32 bytes, as608_usart.o(i.AS608_USART_GPIO_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 100<LI>Call Chain = AS608_USART_GPIO_Init &rArr; USART_Init &rArr; RCC_GetClocksFreq
 </UL>
 <BR>[Calls]<UL><LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;NVIC_PriorityGroupConfig
@@ -543,7 +543,7 @@ Global Symbols
 <LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AS608_USART_GPIO_Init
 </UL>
 
-<P><STRONG><a name="[5c]"></a>Get_FingerPrint</STRONG> (Thumb, 386 bytes, Stack size 40 bytes, main.o(i.Get_FingerPrint))
+<P><STRONG><a name="[5c]"></a>Get_FingerPrint</STRONG> (Thumb, 420 bytes, Stack size 40 bytes, main.o(i.Get_FingerPrint))
 <BR><BR>[Stack]<UL><LI>Max Depth = 80<LI>Call Chain = Get_FingerPrint &rArr; AS608_PS_StoreChar &rArr; AS608_SendPID &rArr; AS608_SendData
 </UL>
 <BR>[Calls]<UL><LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Delay_ms
@@ -742,7 +742,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[4c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART_ReceiveString
 </UL>
 
-<P><STRONG><a name="[6f]"></a>USART_ReceiveByte</STRONG> (Thumb, 20 bytes, Stack size 8 bytes, usart.o(i.USART_ReceiveByte))
+<P><STRONG><a name="[6f]"></a>USART_ReceiveByte</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, usart.o(i.USART_ReceiveByte))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = USART_ReceiveByte &rArr; WaitBusy
 </UL>
 <BR>[Calls]<UL><LI><a href="#[70]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WaitBusy
@@ -770,7 +770,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[4b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AS608_ReceiveNumber
 </UL>
 
-<P><STRONG><a name="[74]"></a>USART_Reset</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, as608_usart.o(i.USART_Reset))
+<P><STRONG><a name="[74]"></a>USART_Reset</STRONG> (Thumb, 44 bytes, Stack size 0 bytes, as608_usart.o(i.USART_Reset))
 <BR><BR>[Called By]<UL><LI><a href="#[44]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;VertifyAck
 </UL>
 
@@ -806,7 +806,7 @@ Global Symbols
 <LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;AS608_PS_DeletChar
 </UL>
 
-<P><STRONG><a name="[70]"></a>WaitBusy</STRONG> (Thumb, 32 bytes, Stack size 16 bytes, usart.o(i.WaitBusy))
+<P><STRONG><a name="[70]"></a>WaitBusy</STRONG> (Thumb, 34 bytes, Stack size 16 bytes, usart.o(i.WaitBusy))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = WaitBusy
 </UL>
 <BR>[Calls]<UL><LI><a href="#[4f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART_GetFlagStatus

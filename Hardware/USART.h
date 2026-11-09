@@ -7,7 +7,7 @@
 #define USART_STR_MAX_LEN 16
 
 void USART_GPIO_Init(void);
-void WaitBusy(USART_TypeDef* USARTx, uint16_t USART_FLAG);
+uint8_t WaitBusy(USART_TypeDef* USARTx, uint16_t USART_FLAG);
 uint8_t USART_ReceiveByteFlag(uint8_t *ReceiveByte);
 void USART_SendByte(uint8_t Byte);
 uint8_t USART_ReceiveByte(void);

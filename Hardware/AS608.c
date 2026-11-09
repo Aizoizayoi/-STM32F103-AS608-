@@ -100,6 +100,8 @@ void AS608_SendCheck(uint16_t Check)
 	AS608_SendData(Check);
 }
 
+
+
 /**
   * @brief  验证并接收应答包
   * @param  Timeout: 超时时间（ms）

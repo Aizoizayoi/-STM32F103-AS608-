@@ -9,12 +9,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define AS_CharBuffer1 0x01
-#define AS_CharBuffer2 0x02
-#define AS_MAX_FingerStore 1023
-char AckMessage[32];
+/** @defgroup AS608_DEFINE
+  * @{
+  */
+#define AS_CharBuffer1 0x01				//特征缓冲区1
+#define AS_CharBuffer2 0x02				//特征缓冲区2
+#define AS_MAX_FingerStore 1023			//指纹库最大存储地址，范围0-1023
 
+char AckMessage[32];					//响应符对应定义
 
+/**
+  * @brief  打印响应结果到串口
+  * @param  none
+  * @retval None
+  */
 
 void PrintAckMessage(uint8_t Ack)
 {
@@ -22,7 +30,11 @@ void PrintAckMessage(uint8_t Ack)
 	printf("%s\r\n", AckMessage);
 }
 
-
+/**
+  * @brief  录入指纹
+  * @param  PageID：要存入的位置，范围：为0-1023
+  * @retval None
+  */
 
 void Get_FingerPrint(uint16_t PageID)
 {
@@ -31,7 +43,7 @@ void Get_FingerPrint(uint16_t PageID)
 	uint8_t GetImageRetry = 0,OtherRetry=0;
 	uint8_t FingerID = 1;
 	uint16_t Score = 0;
-	uint32_t FingerWithout=0;
+	uint32_t FingerWithout=0,GetFingerTimeout=0;
 	
 	printf("Please put Your Finger.\r\n");
 	while(1)
@@ -46,8 +58,10 @@ void Get_FingerPrint(uint16_t PageID)
 		{
 			case 0:
 			{
+				
 				Ack = AS608_PS_GetImage();	
-				if(Ack == 0)
+
+				if(Ack == 0x00)
 				{
 					printf("Image Get Success.\r\n");
 					GetImageRetry=0;
@@ -64,18 +78,20 @@ void Get_FingerPrint(uint16_t PageID)
 				}
 				else
 				{	
+					printf("GetImage Result:");
 					PrintAckMessage(Ack);
 					GetImageRetry++;
 					FingerWithout=0;
 					Step=0;
 					printf("Please Try again.Left %d/5.\r\n",5-GetImageRetry);
-					Delay_ms(100);//留时间抬起手指
+					Delay_ms(1000);//留时间抬起手指
 				}
 				break;
 			}
 			case 1:
 			{
 				Ack = AS608_PS_GenChar(FingerID);
+				printf("GenChar Result:");
 				PrintAckMessage(Ack);
 				if(Ack == 0 && FingerID == 1)
 				{
@@ -83,8 +99,9 @@ void Get_FingerPrint(uint16_t PageID)
 					FingerWithout=0;
 					while(AS608_PS_GetImage()==0x00)		//检测是否抬手
 					{
+						
 						Delay_ms(50);
-						if(++FingerWithout>200)
+						if(++FingerWithout>50)				//并非2.5s，实际测试约15s
 						{
 							printf("Same finger detected. Timeout Return.\r\n");
 							return;
@@ -112,6 +129,7 @@ void Get_FingerPrint(uint16_t PageID)
 			case 2:
 			{
 				Ack = AS608_PS_Match(&Score);
+				printf("Match Result:");
 				PrintAckMessage(Ack);
 				
 				if(Ack == 0)
@@ -131,6 +149,7 @@ void Get_FingerPrint(uint16_t PageID)
 			{
 			
 				Ack = AS608_PS_RegModel();
+				printf("RegModel Result:");
 				PrintAckMessage(Ack);
 				if(Ack == 0)
 				{
@@ -149,6 +168,7 @@ void Get_FingerPrint(uint16_t PageID)
 			{
 				
 				Ack = AS608_PS_StoreChar(AS_CharBuffer1, PageID);
+				printf("StoreChar Result:");
 				PrintAckMessage(Ack);
 				if(Ack == 0)
 				{
@@ -171,7 +191,11 @@ void Get_FingerPrint(uint16_t PageID)
 		}
 	}
 }
-
+/**
+  * @brief  匹配指纹，显示匹配结果
+  * @param  none
+  * @retval None
+  */
 void MatchFinger()
 {
 	uint8_t Ack;
@@ -225,7 +249,11 @@ void MatchFinger()
 		PrintAckMessage(Ack);
 	}
 }
-
+/**
+  * @brief  删除指纹
+  * @param  PageID：要删除的位置，范围：为0-1023
+  * @retval None
+  */
 void DeleteFinger(uint16_t PageID, uint16_t N)
 {
 	uint8_t Ackkk;
@@ -239,7 +267,11 @@ void DeleteFinger(uint16_t PageID, uint16_t N)
 		printf("Delete Fail.\r\n");
 	}
 }
-
+/**
+  * @brief  显示选项菜单
+  * @param  none
+  * @retval None
+  */
 void AS608_ShowMenu(void)
 {
 	printf("1.Fingerprint Enter.\r\n");
@@ -248,7 +280,13 @@ void AS608_ShowMenu(void)
 	printf("4.Exit.\r\n");
 }
 
-/* 把十进制文本转成 0~1024。成功返回 1，并写入 Number */
+
+/**
+  * @brief  十进制文本转成数字
+  * @param  String：串口输入的需要转换的文本
+  * @param  Number：转换后的数字
+  * @retval 成功返回 1，并写入 Number；否则返回0
+  */
 uint8_t StringToNumber(char *String, uint16_t *Number)
 {
 	uint16_t i;
@@ -270,7 +308,12 @@ uint8_t StringToNumber(char *String, uint16_t *Number)
 	return 1;
 }
 
-/* 用 USART_ReceiveString 收一行文本再转成数字。1=成功，2=内容非法，0=超时 */
+
+/**
+  * @brief  接收一行文本转成数字，并对数字进行合法判断
+  * @param  none
+  * @retval 1=成功，2=内容非法，0=输入超时
+  */
 uint8_t AS608_ReceiveNumber(uint16_t *Number)
 {
 	char buf[USART_STR_MAX_LEN];
@@ -291,7 +334,11 @@ uint8_t AS608_ReceiveNumber(uint16_t *Number)
 	return 1;
 }
 
-
+/**
+  * @brief  功能选择。1录入指纹，2匹配指纹，3删除指纹，4退出程序
+  * @param  none
+  * @retval none
+  */
 void AS608_Workshop(void)
 {
 	uint16_t Choice=0,PageID=0;
@@ -373,7 +420,6 @@ int main(void)
 	USART_GPIO_Init();			/* USART1: printf, 9600 */
 	AS608_USART_GPIO_Init();	/* USART2: AS608, 57600 */
 
-	printf("USART1 OK\r\n");	/* 先测串口，确认能打印 */
 	AS608_Workshop();
 	while(1)
 	{
