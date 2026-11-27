@@ -416,11 +416,6 @@
               <FilePath>..\Libraries\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_adc_ex.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f1xx_hal_can.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Libraries\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_can.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f1xx_hal_cec.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_cec.c</FilePath>
@@ -589,11 +584,6 @@
               <FileName>stm32f1xx_hal_tim_ex.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_tim_ex.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f1xx_hal_timebase_rtc_alarm_template.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Libraries\STM32F1xx_HAL_Driver\Src\stm32f1xx_hal_timebase_rtc_alarm_template.c</FilePath>
             </File>
             <File>
               <FileName>stm32f1xx_hal_uart.c</FileName>
@@ -1031,16 +1021,6 @@
           <GroupName>USER</GroupName>
           <Files>
             <File>
-              <FileName>bsp_dwt.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\User\dwt\bsp_dwt.h</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_dwt.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\dwt\bsp_dwt.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\main.c</FilePath>
@@ -1071,49 +1051,24 @@
               <FilePath>..\Hardware\gpio.h</FilePath>
             </File>
             <File>
-              <FileName>bsp_usart.c</FileName>
+              <FileName>i2c.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware\usart\bsp_usart.c</FilePath>
+              <FilePath>..\Hardware\i2c.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_ch340.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Hardware\ch340\bsp_ch340.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_as608.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Hardware\as608\bsp_as608.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_as608_usart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Hardware\as608\bsp_as608_usart.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_usart_callback.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Hardware\bsp_usart_callback.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_usart_callback.h</FileName>
+              <FileName>i2c.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Hardware\bsp_usart_callback.h</FilePath>
+              <FilePath>..\Hardware\i2c.h</FilePath>
             </File>
             <File>
-              <FileName>bsp_as608_usart_ins.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Hardware\as608\bsp_as608_usart_ins.h</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_as608_workshop.c</FileName>
+              <FileName>usart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Hardware\as608\bsp_as608_workshop.c</FilePath>
+              <FilePath>..\Hardware\usart.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_as608_workshop.h</FileName>
+              <FileName>usart.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Hardware\as608\bsp_as608_workshop.h</FilePath>
+              <FilePath>..\Hardware\usart.h</FilePath>
             </File>
             <File>
               <FileName>dma.c</FileName>
@@ -1121,9 +1076,49 @@
               <FilePath>..\Hardware\dma.c</FilePath>
             </File>
             <File>
-              <FileName>dma.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Hardware\dma.h</FilePath>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>pcf8524_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\matrixkey\pcf8524_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>ttl2usb_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\ttl2usb\ttl2usb_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>pcf8524_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\matrixkey\pcf8524_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>as608_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\fingerprint\as608_app.c</FilePath>
+            </File>
+            <File>
+              <FileName>as608_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\fingerprint\as608_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>as608_usart_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\fingerprint\as608_usart_drv.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart_callback.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\usart_callback.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1131,9 +1126,9 @@
           <GroupName>DOC</GroupName>
           <Files>
             <File>
-              <FileName>Readme.txt</FileName>
+              <FileName>statemachine.txt</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Doc\Readme.txt</FilePath>
+              <FilePath>.\statemachine.txt</FilePath>
             </File>
           </Files>
         </Group>

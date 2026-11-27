@@ -1,0 +1,154 @@
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define PWD_LEN_MAX        6U
+#define PWD_IDLE_TIMEOUT_MS 10000U   // 半截密码 10 秒无操作超时清空
+#define AUTO_LOCK_MS       3000U    // 开锁 3 秒后自动回锁
+#define LOCKOUT_MS         30000U   // 输错超限锁定 30 秒
+#define MAX_PWD_FAIL       5U
+
+typedef enum {
+    LOCK_STATE_IDLE = 0,
+    LOCK_STATE_PWD_INPUT,
+    LOCK_STATE_UNLOCKED,
+    LOCK_STATE_LOCKOUT
+} LockState_t;
+
+typedef enum {
+    EVT_NONE = 0,
+    EVT_KEY_DIGIT,      // 矩阵按键数字/字符 (param = ch)
+    EVT_KEY_CLEAR,      // 退格或清空键
+    EVT_FP_OK,          // 指纹验证通过
+    EVT_FP_FAIL,        // 指纹验证失败
+    EVT_BLE_PWD         // 蓝牙发来完整密码字符串 (data = buf, len = n)
+} LockEventType_t;
+
+typedef struct {
+    LockEventType_t type;
+    uint8_t param;
+    uint8_t data[16];
+    uint8_t len;
+} LockEvent_t;
+
+static LockState_t g_lock_state = LOCK_STATE_IDLE;
+static char g_pwd_buf[PWD_LEN_MAX + 1U];
+static uint8_t g_pwd_idx = 0;
+static uint32_t g_last_key_tick = 0;
+static uint32_t g_state_enter_tick = 0;
+static uint8_t g_pwd_fail_cnt = 0;
+
+static const char g_master_pwd[PWD_LEN_MAX + 1U] = "123456";
+
+static void Pwd_ResetBuffer(void) {
+    g_pwd_idx = 0;
+    memset(g_pwd_buf, 0, sizeof(g_pwd_buf));
+}
+
+static bool Pwd_Verify(const char *input, uint8_t len) {
+    if (len != PWD_LEN_MAX) {
+        return false;
+    }
+    return (strncmp(input, g_master_pwd, PWD_LEN_MAX) == 0);
+}
+
+static void Door_Unlock(uint32_t now_ms) {
+    Pwd_ResetBuffer();
+    g_pwd_fail_cnt = 0;
+    g_lock_state = LOCK_STATE_UNLOCKED;
+    g_state_enter_tick = now_ms;
+    // TODO: 驱动开锁执行机构 + 更新 OLED 显示“已开锁”
+}
+
+static void Handle_PwdFailure(uint32_t now_ms) {
+    Pwd_ResetBuffer();
+    g_pwd_fail_cnt++;
+    if (g_pwd_fail_cnt >= MAX_PWD_FAIL) {
+        g_lock_state = LOCK_STATE_LOCKOUT;
+        g_state_enter_tick = now_ms;
+        // TODO: OLED 提示“密码错误次数过多，已锁定”
+    } else {
+        g_lock_state = LOCK_STATE_IDLE;
+        // TODO: OLED 提示“密码错误”
+    }
+}
+
+void Lock_FSM_Step(const LockEvent_t *ev, uint32_t now_ms) {
+    // 1. 周期性超时检查（非阻塞）
+    if (g_lock_state == LOCK_STATE_PWD_INPUT) {
+        if ((now_ms - g_last_key_tick) >= PWD_IDLE_TIMEOUT_MS) {
+            Pwd_ResetBuffer();
+            g_lock_state = LOCK_STATE_IDLE;
+        }
+    } else if (g_lock_state == LOCK_STATE_UNLOCKED) {
+        if ((now_ms - g_state_enter_tick) >= AUTO_LOCK_MS) {
+            g_lock_state = LOCK_STATE_IDLE;
+            // TODO: 恢复上锁状态显示
+        }
+    } else if (g_lock_state == LOCK_STATE_LOCKOUT) {
+        if ((now_ms - g_state_enter_tick) >= LOCKOUT_MS) {
+            g_pwd_fail_cnt = 0;
+            g_lock_state = LOCK_STATE_IDLE;
+        }
+    }
+
+    if (ev == NULL || ev->type == EVT_NONE) {
+        return;
+    }
+
+    // 2. 锁定态处理：防暴力破解期间拦截密码/蓝牙输入
+    if (g_lock_state == LOCK_STATE_LOCKOUT) {
+        if (ev->type == EVT_FP_OK) {
+            Door_Unlock(now_ms); // 如需指纹也受锁定限制，可删掉此分支
+        }
+        return;
+    }
+
+    // 3. 指纹事件：无论当前是 IDLE 还是 PWD_INPUT（输了一半密码），匹配成功直接开锁
+    if (ev->type == EVT_FP_OK) {
+        Door_Unlock(now_ms);
+        return;
+    }
+    if (ev->type == EVT_FP_FAIL) {
+        // 保留已输入的半截密码或按需提示指纹失败，不卡死状态机
+        return;
+    }
+
+    // 4. 蓝牙密码事件：随时切入校验，无需等本地按键输完
+    if (ev->type == EVT_BLE_PWD) {
+        if (Pwd_Verify((const char *)ev->data, ev->len)) {
+            Door_Unlock(now_ms);
+        } else {
+            Handle_PwdFailure(now_ms);
+        }
+        return;
+    }
+
+    // 5. 本地矩阵按键事件
+    if (ev->type == EVT_KEY_CLEAR) {
+        Pwd_ResetBuffer();
+        g_lock_state = LOCK_STATE_IDLE;
+        return;
+    }
+
+    if (ev->type == EVT_KEY_DIGIT) {
+        if (g_lock_state == LOCK_STATE_UNLOCKED) {
+            return;
+        }
+        g_lock_state = LOCK_STATE_PWD_INPUT;
+        g_last_key_tick = now_ms;
+
+        if (g_pwd_idx < PWD_LEN_MAX) {
+            g_pwd_buf[g_pwd_idx++] = (char)ev->param;
+            g_pwd_buf[g_pwd_idx] = '\0';
+        }
+
+        if (g_pwd_idx == PWD_LEN_MAX) {
+            if (Pwd_Verify(g_pwd_buf, g_pwd_idx)) {
+                Door_Unlock(now_ms);
+            } else {
+                Handle_PwdFailure(now_ms);
+            }
+        }
+    }
+}

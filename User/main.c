@@ -1,429 +1,180 @@
-#include "stm32f10x.h"                  // Device header
-#include "AS608.h"
-#include "AS608_USART_Ins.h"
-#include "AS608_USART.h"
-#include "USART.h"
-#include "OLED.h"
-#include "Delay.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-/** @defgroup AS608_DEFINE
-  * @{
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
   */
-#define AS_CharBuffer1 0x01				//特征缓冲区1
-#define AS_CharBuffer2 0x02				//特征缓冲区2
-#define AS_MAX_FingerStore 1023			//指纹库最大存储地址，范围0-1023
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "dma.h"
+#include "i2c.h"
+#include "spi.h"
+#include "usart.h"
+#include "gpio.h"
 
-char AckMessage[32];					//响应符对应定义
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "fingerprint/as608_app.h"
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
 
 /**
-  * @brief  打印响应结果到串口
-  * @param  none
-  * @retval None
+  * @brief  The application entry point.
+  * @retval int
   */
-
-void PrintAckMessage(uint8_t Ack)
-{
-	strcpy(AckMessage, EnsureMessage(Ack));
-	printf("%s\r\n", AckMessage);
-}
-
-/**
-  * @brief  录入指纹
-  * @param  PageID：要存入的位置，范围：为0-1023
-  * @retval None
-  */
-
-void Get_FingerPrint(uint16_t PageID)
-{
-	uint8_t Step = 0;
-	uint8_t Ack = 0;
-	uint8_t GetImageRetry = 0,OtherRetry=0;
-	uint8_t FingerID = 1;
-	uint16_t Score = 0;
-	uint32_t FingerWithout=0,GetFingerTimeout=0;
-	
-	printf("Please put Your Finger.\r\n");
-	while(1)
-	{
-		
-		if(GetImageRetry > 5 || OtherRetry>5)
-		{
-			printf("Retry too many times.\r\n");
-			break;
-		}
-		switch(Step)
-		{
-			case 0:
-			{
-				
-				Ack = AS608_PS_GetImage();	
-
-				if(Ack == 0x00)
-				{
-					printf("Image Get Success.\r\n");
-					GetImageRetry=0;
-					Step = 1;
-				}
-				else if(Ack == 0x02)
-				{
-					Delay_ms(50);
-					if(FingerWithout++>600)
-					{
-						printf("Wait finger timeout.\r\n");
-						return;
-					}
-				}
-				else
-				{	
-					printf("GetImage Result:");
-					PrintAckMessage(Ack);
-					GetImageRetry++;
-					FingerWithout=0;
-					Step=0;
-					printf("Please Try again.Left %d/5.\r\n",5-GetImageRetry);
-					Delay_ms(1000);//留时间抬起手指
-				}
-				break;
-			}
-			case 1:
-			{
-				Ack = AS608_PS_GenChar(FingerID);
-				printf("GenChar Result:");
-				PrintAckMessage(Ack);
-				if(Ack == 0 && FingerID == 1)
-				{
-					printf("Please lift finger, then put Second Time.\r\n");
-					FingerWithout=0;
-					while(AS608_PS_GetImage()==0x00)		//检测是否抬手
-					{
-						
-						Delay_ms(50);
-						if(++FingerWithout>50)				//并非2.5s，实际测试约15s
-						{
-							printf("Same finger detected. Timeout Return.\r\n");
-							return;
-						}
-					}
-					printf("Please put Second Time.\r\n");
-					Step = 0;
-					FingerID = 2;
-					FingerWithout=0;
-				}
-				else if(Ack == 0 && FingerID == 2)
-				{
-					Step = 2;
-					FingerID = 1;
-				}
-				else
-				{
-					GetImageRetry=0;//每次放手指都可以试5次
-					OtherRetry++;
-					Step = 0;
-					FingerID = 1;
-				}
-				break;
-			}
-			case 2:
-			{
-				Ack = AS608_PS_Match(&Score);
-				printf("Match Result:");
-				PrintAckMessage(Ack);
-				
-				if(Ack == 0)
-				{
-					Step = 3;
-				}
-				else
-				{
-					GetImageRetry=0;
-					OtherRetry++;
-					Step = 0;
-					FingerID = 1;
-				}
-				break;
-			}
-			case 3:
-			{
-			
-				Ack = AS608_PS_RegModel();
-				printf("RegModel Result:");
-				PrintAckMessage(Ack);
-				if(Ack == 0)
-				{
-					Step = 4;
-				}
-				else
-				{
-					GetImageRetry=0;
-					OtherRetry++;
-					Step = 0;
-					FingerID = 1;
-				}
-				break;
-			}
-			case 4:
-			{
-				
-				Ack = AS608_PS_StoreChar(AS_CharBuffer1, PageID);
-				printf("StoreChar Result:");
-				PrintAckMessage(Ack);
-				if(Ack == 0)
-				{
-					printf("Finger input success.Store in Pos%d\r\n",PageID);
-					Step = 0;
-					return;
-				}
-				else
-				{
-					GetImageRetry=0;
-					OtherRetry++;
-					Step = 0;
-					FingerID = 1;
-				}
-				break;
-			}
-			default:
-				Step = 0;
-				break;
-		}
-	}
-}
-/**
-  * @brief  匹配指纹，显示匹配结果
-  * @param  none
-  * @retval None
-  */
-void MatchFinger()
-{
-	uint8_t Ack;
-	uint16_t PageID;
-	uint16_t MatchScore;
-	uint16_t Timeout=0;
-	printf("Please put your finger to match.\r\n");
-	
-	while(1)
-	{
-		Ack = AS608_PS_GetImage();
-		if(Ack==0x00)	//获取到了指纹
-			break;
-		else if(Ack==0x02)//感应器无手指放入
-		{
-			Delay_ms(50);
-			if(++Timeout>200)
-			{
-				printf("Wait finger timeout.\r\n");
-				return;
-			}
-				
-		}
-		else//指纹录入出错
-		{
-			printf("Get Finger Print Fail. Return.\r\n");
-			PrintAckMessage(Ack);
-			Timeout=0;
-			return;
-		}
-	}
-	
-
-	if(AS608_PS_GenChar(0x01)!=0x00)
-	{
-		printf("Genchar Fail.Return.\r\n");
-		return;
-	}
-	if(AS608_PS_Search(AS_CharBuffer1,0x00,AS_MAX_FingerStore+1,&PageID,&MatchScore)!=0x00)
-	{
-		printf("Finger Search Fail.Return.\r\n");
-		return;
-	}
-	if(Ack==0)
-	{
-		printf("Match. PageID=%u Score=%u\r\n", PageID, MatchScore);
-	}
-	else
-	{
-		printf("Not Match.\r\n");
-		PrintAckMessage(Ack);
-	}
-}
-/**
-  * @brief  删除指纹
-  * @param  PageID：要删除的位置，范围：为0-1023
-  * @retval None
-  */
-void DeleteFinger(uint16_t PageID, uint16_t N)
-{
-	uint8_t Ackkk;
-	Ackkk=AS608_PS_DeletChar(PageID,N);
-	if(Ackkk==0)
-	{
-		printf("Delete No%d to No%d Success.\r\n",PageID,PageID+N-1);
-	}
-	else
-	{
-		printf("Delete Fail.\r\n");
-	}
-}
-/**
-  * @brief  显示选项菜单
-  * @param  none
-  * @retval None
-  */
-void AS608_ShowMenu(void)
-{
-	printf("1.Fingerprint Enter.\r\n");
-	printf("2.Fingerprint Match.\r\n");
-	printf("3.Fingerprint Delete.\r\n");
-	printf("4.Exit.\r\n");
-}
-
-
-/**
-  * @brief  十进制文本转成数字
-  * @param  String：串口输入的需要转换的文本
-  * @param  Number：转换后的数字
-  * @retval 成功返回 1，并写入 Number；否则返回0
-  */
-uint8_t StringToNumber(char *String, uint16_t *Number)
-{
-	uint16_t i;
-	uint16_t num=0;
-
-	if(String==NULL || Number==NULL || String[0]=='\0')//空指针及空字符
-		return 0;
-
-	for(i=0;String[i]!='\0';i++)
-	{
-		if(String[i]<'0' || String[i]>'9')//避免非数字混入
-			return 0;
-		
-		num=(uint16_t)(num*10u+(uint16_t)(String[i]-'0')); //x10后加，再x10，再加，再x10
-		if(num>AS_MAX_FingerStore)	//指纹库最大容积0-1023
-			return 0;
-	}
-	*Number=num;
-	return 1;
-}
-
-
-/**
-  * @brief  接收一行文本转成数字，并对数字进行合法判断
-  * @param  none
-  * @retval 1=成功，2=内容非法，0=输入超时
-  */
-uint8_t AS608_ReceiveNumber(uint16_t *Number)
-{
-	char buf[USART_STR_MAX_LEN];
-	uint8_t Result;
-
-	Result=USART_ReceiveString(buf);
-	if(Result==2)
-	{
-		return 0;
-	}
-
-	if(Result==0 || StringToNumber(buf,Number)==0)//输入非法或数字超出最大值
-	{
-		printf("Input Invalid. Please input num from 0-1023.\r\n");
-		return 2;
-	}
-	printf("Receive\r\n");
-	return 1;
-}
-
-/**
-  * @brief  功能选择。1录入指纹，2匹配指纹，3删除指纹，4退出程序
-  * @param  none
-  * @retval none
-  */
-void AS608_Workshop(void)
-{
-	uint16_t Choice=0,PageID=0;
-	uint8_t Retry=0;
-	uint8_t ReadResult;
-
-	AS608_ShowMenu();
-
-	while(1)
-	{
-		ReadResult=AS608_ReceiveNumber(&Choice);
-	
-		if(ReadResult==0)
-		{
-			printf("Long time no operation. Exit.\r\n");
-			return;
-		}
-		if(ReadResult!=1 || Choice<1 || Choice>4)
-		{
-			Retry++;
-			if(Retry>=5)
-			{
-				printf("Too many wrong number. Return\r\n");
-				return;
-			}
-			printf("Invalid choice. Please Retry. Left %d/5.\r\n",5-Retry);
-			continue;
-		}
-		Retry=0;
-
-		switch(Choice)
-		{
-			case 1:
-			{
-				printf("Please input the stored position.\r\n");
-				if(AS608_ReceiveNumber(&PageID)!=1)
-					break;
-				printf("--->PageID=%d Input OK.\r\n",PageID);
-				Get_FingerPrint(PageID);
-				AS608_ShowMenu();
-				break;
-			}
-			case 2:
-			{
-				MatchFinger();
-				AS608_ShowMenu();
-				break;
-			}
-			case 3:
-			{
-				printf("Please input the ID you want to delete.\r\n");
-				if(AS608_ReceiveNumber(&PageID)!=1)
-					break;
-				printf("--->PageID=%d Input OK.\r\n",PageID);
-				DeleteFinger(PageID,1);
-				AS608_ShowMenu();
-				break;
-			}
-			case 4:
-			{
-				printf("Exit Sucess.\r\n");
-				return;
-			}
-			default:
-			{
-				printf("Invalid choice. Please try again.\r\n");
-				break;
-			}
-		}
-	}
-}
-
-
-
 int main(void)
 {
 
+  /* USER CODE BEGIN 1 */
 
-	USART_GPIO_Init();			/* USART1: printf, 9600 */
-	AS608_USART_GPIO_Init();	/* USART2: AS608, 57600 */
+  /* USER CODE END 1 */
 
-	AS608_Workshop();
-	while(1)
-	{
-		
-		
-	}
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_I2C1_Init();
+  MX_USART1_UART_Init();
+  MX_I2C2_Init();
+  MX_SPI1_Init();
+  MX_USART2_UART_Init();
+	
+  while (1)
+  {
+		//AS608_UI();
+	
+  }
+  /* USER CODE END 3 */
 }
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+#ifdef USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */

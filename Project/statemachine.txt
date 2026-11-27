@@ -1,0 +1,45 @@
+typedef enum
+{
+	无操作空闲中 = 0;
+	密码输入中 = 1；
+	密码输入完成=2；
+	指纹输入中=3；
+	指纹输入完成=4；
+	密码添加中=6；
+	密码密码删除中=7；
+	密码查询中=8；
+	指纹删除中=9；
+	指纹添加中=10；
+	指纹查询中=11；
+	封锁中=12
+	指纹解锁中=13
+	密码解锁中=14
+
+}doorlck_state_t;
+
+void menu()
+{
+static doorlck_state_t
+uint8_t ack; //接收模块获取指纹的状态应答
+
+ack=get_AS608_PS_GetImage();
+
+if(ack==ok)//模块上有手指
+{	
+	state=指纹解锁中；
+	
+}
+
+if(state==指纹解锁中)
+{
+	ack=MatchFinger();
+	if ack=ok
+		printf（开锁失败）；
+		失败+1；
+		state=	无操作空闲中；
+	
+	
+}
+	
+
+}
